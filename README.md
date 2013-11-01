@@ -31,7 +31,7 @@ var opts = new GetOpt("Sample application that sorts input rows based on a delim
 
 The lib has a built-in ShowUsage function that gives you this output if you call it (or call the program with the build-in "-h" option):
 
-'''
+```
 Sample application that sorts input rows based on a delimeted field
 Usage: SampleApp -vnh -s <String> -f <Integer> [file]
 Options:
@@ -40,5 +40,5 @@ Options:
  -n --numeric            : sort numerically
  -f --field <Integer>    : Which field to sort by. Default = 0
  -h --help               : This help
- '''
+```
  
