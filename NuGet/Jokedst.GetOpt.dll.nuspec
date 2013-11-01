@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Jokedst.GetOpt.dll</id>
+    <version>1.0.1</version>
+    <authors>joawen</authors>
+    <owners>joawen</owners>
+    <licenseUrl>https://github.com/jokedst/GetOpt/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/jokedst/GetOpt</projectUrl>
+    <iconUrl>https://raw.github.com/jokedst/GetOpt/master/getopt.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>GetOpt for parsing command line options</description>
+    <releaseNotes>First version with fix</releaseNotes>
+    <copyright>Copyright 2013</copyright>
+    <tags>getopt CommandLine</tags>
+  </metadata>
+</package>
