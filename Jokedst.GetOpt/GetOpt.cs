@@ -15,13 +15,25 @@
         /// </summary>
         private readonly string applicationDescription;
 
-        private readonly List<CommandLineOption> _options;
+        /// <summary>
+        /// All command line options
+        /// </summary>
+        private readonly List<CommandLineOption> options;
 
-        private readonly Dictionary<char, CommandLineOption> _shortNameLookup = new Dictionary<char, CommandLineOption>();
+        /// <summary>
+        /// Lookup for all options with a short name
+        /// </summary>
+        private readonly Dictionary<char, CommandLineOption> shortNameLookup = new Dictionary<char, CommandLineOption>();
 
-        private readonly Dictionary<string, CommandLineOption> _longNameLookup = new Dictionary<string, CommandLineOption>();
+        /// <summary>
+        /// Lookup for all options with a long name
+        /// </summary>
+        private readonly Dictionary<string, CommandLineOption> longNameLookup = new Dictionary<string, CommandLineOption>();
 
-        private readonly List<CommandLineOption> _unnamedList = new List<CommandLineOption>();
+        /// <summary>
+        /// List of all unnamed options (i.e. options that you write without a "-" or "--" before)
+        /// </summary>
+        private readonly List<CommandLineOption> unnamedList = new List<CommandLineOption>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GetOpt"/> class 
@@ -39,23 +51,31 @@
         {
             this.applicationDescription = applicationDescription;
             this.ParsedOptions = -1;
-            this._options = options.ToList();
-            foreach (var option in this._options)
+            this.options = options.ToList();
+            foreach (var option in this.options)
             {
                 if (option.ShortName != '\0')
-                    this._shortNameLookup.Add(option.ShortName, option);
+                {
+                    this.shortNameLookup.Add(option.ShortName, option);
+                }
+
                 if (option.LongName != null)
-                    this._longNameLookup.Add(option.LongName, option);
+                {
+                    this.longNameLookup.Add(option.LongName, option);
+                }
+
                 if (option.ShortName == '\0' && option.LongName == null)
-                    this._unnamedList.Add(option);
+                {
+                    this.unnamedList.Add(option);
+                }
             }
 
             if (addHelp)
             {
                 var helpOption = new CommandLineOption('h', "help", "This help", ParameterType.None, o => this.ShowUsage());
-                this._shortNameLookup.Add(helpOption.ShortName, helpOption);
-                this._longNameLookup.Add(helpOption.LongName, helpOption);
-                this._options.Add(helpOption);
+                this.shortNameLookup.Add(helpOption.ShortName, helpOption);
+                this.longNameLookup.Add(helpOption.LongName, helpOption);
+                this.options.Add(helpOption);
             }
         }
 
@@ -86,11 +106,11 @@
             }
 
             Console.Write("Usage: {0}", cmd);
-            if (this._shortNameLookup.Count > 0)
+            if (this.shortNameLookup.Count > 0)
             {
                 // First take care of options without parameters
                 bool firstHit = true;
-                foreach (var option in this._shortNameLookup.Values)
+                foreach (var option in this.shortNameLookup.Values)
                 {
                     if (option.ParameterType == ParameterType.None)
                     {
@@ -99,12 +119,13 @@
                             Console.Write(" -");
                             firstHit = false;
                         }
+
                         Console.Write(option.ShortName);
                     }
                 }
 
                 // Then take care of options with parameters
-                foreach (var option in this._shortNameLookup.Values)
+                foreach (var option in this.shortNameLookup.Values)
                 {
                     if (option.ParameterType != ParameterType.None)
                     {
@@ -114,50 +135,52 @@
             }
 
             // Finally write all unnamed parameters
-            foreach (var option in this._unnamedList)
+            foreach (var option in this.unnamedList.Where(option => option.Description != null))
             {
-                if (option.Description != null)
-                {
-                    if (option.IsOptional)
-                    {
-                        Console.Write(" [{0}]", option.Description);
-                    }
-                    else
-                    {
-                        Console.Write(" <{0}>", option.Description);
-                    }
-                }
+                Console.Write(option.IsOptional ? " [{0}]" : " <{0}>", option.Description);
             }
 
             Console.WriteLine();
 
             // Now print all options, one row at a time
-            if (this._shortNameLookup.Count > 0 || this._longNameLookup.Count > 0)
+            if (this.shortNameLookup.Count > 0 || this.longNameLookup.Count > 0)
             {
                 Console.WriteLine("Options:");
 
                 // First create all lines so we can figure out how long each option is so it all aligns nicely
                 var lines = new Dictionary<string, CommandLineOption>();
                 int maxlength = 0;
-                foreach (var option in this._options)
+                foreach (var option in this.options)
                 {
                     if (option.ShortName != '\0' || option.LongName != null)
                     {
                         string line = string.Empty;
-                        if (option.ShortName != '\0') line += string.Format(" -{0} ", option.ShortName); else line += "   ";
-                        if (option.LongName != null) line += string.Format("--{0} ", option.LongName);
-                        if (option.ParameterType != ParameterType.None) line += string.Format("<{0}> ", option.ParameterType);
+                        if (option.ShortName != '\0')
+                        {
+                            line += string.Format(" -{0} ", option.ShortName);
+                        }
+                        else
+                        {
+                            line += "   ";
+                        }
+
+                        if (option.LongName != null)
+                        {
+                            line += string.Format("--{0} ", option.LongName);
+                        }
+
+                        if (option.ParameterType != ParameterType.None)
+                        {
+                            line += string.Format("<{0}> ", option.ParameterType);
+                        }
+
                         line += "{0}";
-                        if (line.Length > maxlength) maxlength = line.Length;
-                        ////if (option.description != null) line += string.Format(": {0}", option.description);
+                        if (line.Length > maxlength)
+                        {
+                            maxlength = line.Length;
+                        }
 
                         lines.Add(line, option);
-                        /*
-                        if (option.shortName != '\0') Console.Write(" -{0} ", option.shortName); else Console.Write("   ");
-                        if (option.longName != null) Console.Write("--{0} ", option.longName); else Console.Write("    ");
-                        if (option.parameterType != ParameterType.None) Console.Write("<{0}> ", option.parameterType);
-                        if (option.description != null) Console.Write(": {0}", option.description);
-                        Console.WriteLine();*/
                     }
                 }
 
@@ -166,6 +189,7 @@
                     Console.WriteLine(line.Key + ": " + line.Value.Description, string.Empty.PadLeft(maxlength - line.Key.Length));
                 }
             }
+
             Environment.Exit(0);
         }
 
@@ -185,9 +209,9 @@
                 if (args[i].StartsWith("--"))
                 {
                     string name = args[i].Substring(2);
-                    if (this._longNameLookup.ContainsKey(name))
+                    if (this.longNameLookup.ContainsKey(name))
                     {
-                        i = ParseAndDispatch(args, i, this._longNameLookup[name]);
+                        i = ParseAndDispatch(args, i, this.longNameLookup[name]);
                     }
                     else
                     {
@@ -199,21 +223,21 @@
                     int newi = i;
                     for (var optionIndex = 1; optionIndex < args[i].Length; optionIndex++)
                     {
-                        if (this._shortNameLookup.ContainsKey(args[i][optionIndex]))
+                        if (this.shortNameLookup.ContainsKey(args[i][optionIndex]))
                         {
-                            var option = this._shortNameLookup[args[i][optionIndex]];
+                            var option = this.shortNameLookup[args[i][optionIndex]];
 
                             // If this is an option in the middle that requires a parameter, fail. Only the last such option can have a parameter
                             if (option.ParameterType != ParameterType.None && optionIndex != args[i].Length - 1)
                             {
-                                throw new CommandLineException("Option '{0}' requires a parameter", args[i][optionIndex].ToString());
+                                throw new CommandLineException(string.Format("Option '{0}' requires a parameter", args[i][optionIndex]));
                             }
 
                             newi = ParseAndDispatch(args, i, option);
                         }
                         else
                         {
-                            throw new CommandLineException(string.Format("Unknown option '{0}'", args[i][optionIndex].ToString()));
+                            throw new CommandLineException(string.Format("Unknown option '{0}'", args[i][optionIndex]));
                         }
                     }
 
@@ -222,16 +246,16 @@
                 else
                 {
                     // This is an unnamed parameter
-                    if (this._unnamedList.Count > unnamedIndex)
+                    if (this.unnamedList.Count > unnamedIndex)
                     {
-                        i = ParseAndDispatch(args, --i, this._unnamedList[unnamedIndex++]);
+                        i = ParseAndDispatch(args, --i, this.unnamedList[unnamedIndex++]);
                     }
                 }
 
                 i++;
             }
 
-            if (this._unnamedList.Count(x => !x.IsOptional) != unnamedIndex)
+            if (this.unnamedList.Count(x => !x.IsOptional) != unnamedIndex)
             {
                 throw new CommandLineException("Missing parameters");
             }
@@ -296,8 +320,10 @@
                     {
                         option.SetFunction(null);
                     }
+
                     return i;
             }
+
             return i;
         }
     }

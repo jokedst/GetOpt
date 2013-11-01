@@ -1,15 +1,15 @@
 GetOpt
 ======
 
-getopt lib for parsing 
+Lib for parsing command line parameters
 
-
+Influenced by getopt
 
 Example
 -------
 
 In your main method, just specify which option you support. 
-Each option has a delegate that is called when the option i s found, use it to set your local variables.
+Each option has a delegate that is called when the option is found, use it to set your local variables.
 
 ```csharp
 var opts = new GetOpt("Sample application that sorts input rows based on a delimeted field", 
