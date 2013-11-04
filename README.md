@@ -1,9 +1,11 @@
 GetOpt
 ======
 
-Lib for parsing command line parameters
+Lib for parsing command line parameters.
 
-Influenced by getopt
+Influenced by getopt.
+
+Handles 
 
 Example
 -------
@@ -25,6 +27,12 @@ var opts = new GetOpt("Sample application that sorts input rows based on a delim
 				ParameterType.Integer, o => field = (int)o),
 			new CommandLineOption("file", ParameterType.String, o => file = (string)o, true),
 		});
+```
+
+Then parse the command line options like this (preferably inside a try/catch since it throws exceptions on errors):
+
+```
+ opts.ParseOptions(args);
 ```
 
 
