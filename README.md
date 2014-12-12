@@ -5,8 +5,6 @@ Lib for parsing command line parameters.
 
 Influenced by getopt.
 
-Handles 
-
 Example
 -------
 
@@ -50,3 +48,9 @@ Options:
  -h --help               : This help
 ```
  
+Creting stand-alone exe's
+-------------------------
+
+To create a stand-along exe (that doesn't require the Jokedst.GetOpt.dll) you can use ILMerge.exe from Microsoft.
+
+The sample app in this repo creates a "combined.exe" file using a post-build build step.
