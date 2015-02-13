@@ -52,6 +52,7 @@
             this.applicationDescription = applicationDescription;
             this.ParsedOptions = -1;
             this.options = options.ToList();
+            this.AdditionalParameters = new List<string>();
             foreach (var option in this.options)
             {
                 if (option.ShortName != '\0')
@@ -83,6 +84,11 @@
         /// Gets number of found and parsed options
         /// </summary>
         public int ParsedOptions { get; private set; }
+
+        /// <summary>
+        /// All additional parameters not specified are put here
+        /// </summary>
+        public List<string> AdditionalParameters { get; protected set; }
 
         /// <summary>
         /// Shows a generated help listing of all available options and parameters
@@ -198,70 +204,88 @@
         /// That this function writes to the console, and may quit the program if an error occurs
         /// </summary>
         /// <param name="args">The command line parameters array to parse</param>
+        /// <param name="exitOnError">If true will exit the application showing the error on any error</param>
         /// <returns>Number of parsed parameters</returns>
-        public int ParseOptions(string[] args)
+        public int ParseOptions(string[] args, bool exitOnError = false)
         {
-            int i = 0;
-
-            int unnamedIndex = 0;
-            while (i < args.Length)
+            try
             {
-                if (args[i].StartsWith("--"))
+                int i = 0;
+
+                int unnamedIndex = 0;
+                while (i < args.Length)
                 {
-                    string name = args[i].Substring(2);
-                    if (this.longNameLookup.ContainsKey(name))
+                    if (args[i].StartsWith("--"))
                     {
-                        i = ParseAndDispatch(args, i, this.longNameLookup[name]);
-                    }
-                    else
-                    {
-                        throw new CommandLineException(string.Format("Unknown option '{0}'", args[i]));
-                    }
-                }
-                else if (args[i].StartsWith("-"))
-                {
-                    int newi = i;
-                    for (var optionIndex = 1; optionIndex < args[i].Length; optionIndex++)
-                    {
-                        if (this.shortNameLookup.ContainsKey(args[i][optionIndex]))
+                        string name = args[i].Substring(2);
+                        if (this.longNameLookup.ContainsKey(name))
                         {
-                            var option = this.shortNameLookup[args[i][optionIndex]];
-
-                            // If this is an option in the middle that requires a parameter, fail. Only the last such option can have a parameter
-                            if (option.ParameterType != ParameterType.None && optionIndex != args[i].Length - 1)
-                            {
-                                throw new CommandLineException(string.Format("Option '{0}' requires a parameter", args[i][optionIndex]));
-                            }
-
-                            newi = ParseAndDispatch(args, i, option);
+                            i = ParseAndDispatch(args, i, this.longNameLookup[name]);
                         }
                         else
                         {
-                            throw new CommandLineException(string.Format("Unknown option '{0}'", args[i][optionIndex]));
+                            throw new CommandLineException(string.Format("Unknown option '{0}'", args[i]));
+                        }
+                    }
+                    else if (args[i].StartsWith("-"))
+                    {
+                        int newi = i;
+                        for (var optionIndex = 1; optionIndex < args[i].Length; optionIndex++)
+                        {
+                            if (this.shortNameLookup.ContainsKey(args[i][optionIndex]))
+                            {
+                                var option = this.shortNameLookup[args[i][optionIndex]];
+
+                                // If this is an option in the middle that requires a parameter, fail. Only the last such option can have a parameter
+                                if (option.ParameterType != ParameterType.None && optionIndex != args[i].Length - 1)
+                                {
+                                    throw new CommandLineException(string.Format("Option '{0}' requires a parameter", args[i][optionIndex]));
+                                }
+
+                                newi = ParseAndDispatch(args, i, option);
+                            }
+                            else
+                            {
+                                throw new CommandLineException(string.Format("Unknown option '{0}'", args[i][optionIndex]));
+                            }
+                        }
+
+                        i = newi;
+                    }
+                    else
+                    {
+                        // This is an unnamed parameter
+                        if (this.unnamedList.Count > unnamedIndex)
+                        {
+                            i = ParseAndDispatch(args, --i, this.unnamedList[unnamedIndex++]);
+                        }
+                        else
+                        {
+                            this.AdditionalParameters.Add(args[i]);
                         }
                     }
 
-                    i = newi;
+                    i++;
                 }
-                else
+
+                if (this.unnamedList.Count(x => !x.IsOptional) > unnamedIndex)
                 {
-                    // This is an unnamed parameter
-                    if (this.unnamedList.Count > unnamedIndex)
-                    {
-                        i = ParseAndDispatch(args, --i, this.unnamedList[unnamedIndex++]);
-                    }
+                    throw new CommandLineException("Missing parameters");
                 }
 
-                i++;
+                this.ParsedOptions = i;
+                return i;
             }
-
-            if (this.unnamedList.Count(x => !x.IsOptional) > unnamedIndex)
+            catch (CommandLineException e)
             {
-                throw new CommandLineException("Missing parameters");
+                if (exitOnError)
+                {
+                    Console.WriteLine("Error: {0}", e.Message);
+                    Environment.Exit(1);
+                    return 0;
+                }
+                throw;
             }
-
-            this.ParsedOptions = i;
-            return i;
         }
 
         /// <summary>

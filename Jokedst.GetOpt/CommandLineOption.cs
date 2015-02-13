@@ -31,7 +31,7 @@
         /// <param name="parameterType"> Type of parameter </param>
         /// <param name="setFunction"> Function to call when this parameter is found. Function parameter is found value </param>
         /// <param name="optional"> If false an exception will be thrown if this parameter can not be found. </param>
-        public CommandLineOption(string description, ParameterType parameterType, SetOptionDelegate setFunction, bool optional)
+        public CommandLineOption(string description, ParameterType parameterType, SetOptionDelegate setFunction, bool optional = false)
         {
             this.ShortName = '\0';
             this.LongName = null;

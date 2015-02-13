@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Jokedst.GetOpt</name>
+    </assembly>
+    <members>
+        <member name="T:Jokedst.GetOpt.SetOptionDelegate">
+            <summary>
+            Delegate that acts on the parameter when found
+            </summary>
+            <param name="value"> The parameter argument (or null if none) </param>
+        </member>
+        <member name="T:Jokedst.GetOpt.CommandLineException">
+            <summary>
+            A command line option parsing exception.
+            </summary>
+        </member>
+        <member name="M:Jokedst.GetOpt.CommandLineException.#ctor(System.String)">
+            <summary> 
+            Initializes a new instance of the <see cref="T:Jokedst.GetOpt.CommandLineException"/> class.
+            </summary>
+            <param name="message"> The message that describes the error. </param>
+        </member>
+        <member name="M:Jokedst.GetOpt.CommandLineException.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Jokedst.GetOpt.CommandLineException"/> class.
+            </summary>
+            <param name="message"> The message that describes the error. </param>
+            <param name="parameter"> The parameter with the error. </param>
+        </member>
+        <member name="T:Jokedst.GetOpt.CommandLineOption">
+            <summary>
+            Describes a possible option that will be parsed from the command line parameters
+            </summary>
+        </member>
+        <member name="M:Jokedst.GetOpt.CommandLineOption.#ctor(System.Char,System.String,System.String,Jokedst.GetOpt.ParameterType,Jokedst.GetOpt.SetOptionDelegate)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Jokedst.GetOpt.CommandLineOption"/> class.
+            </summary>
+            <param name="shortName"> Single character name of this parameter. Optional. </param>
+            <param name="longName"> The long name of this parameter. Optional. </param>
+            <param name="description"> Description of this parameter, to be used in the Usings function. </param>
+            <param name="parameterType"> Type of parameter </param>
+            <param name="setFunction"> Function to call when this parameter is found. Function parameter is found value </param>
+        </member>
+        <member name="M:Jokedst.GetOpt.CommandLineOption.#ctor(System.String,Jokedst.GetOpt.ParameterType,Jokedst.GetOpt.SetOptionDelegate,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Jokedst.GetOpt.CommandLineOption"/> class.
+            This constructor is used to create an unnamed parameter
+            </summary>
+            <param name="description"> Description of this parameter, to be used in the Usings function. </param>
+            <param name="parameterType"> Type of parameter </param>
+            <param name="setFunction"> Function to call when this parameter is found. Function parameter is found value </param>
+            <param name="optional"> If false an exception will be thrown if this parameter can not be found. </param>
+        </member>
+        <member name="P:Jokedst.GetOpt.CommandLineOption.ShortName">
+            <summary>Gets single character version of this option (e.g. -f)</summary>
+        </member>
+        <member name="P:Jokedst.GetOpt.CommandLineOption.LongName">
+            <summary>Gets long version of this option (e.g. --file)</summary>
+        </member>
+        <member name="P:Jokedst.GetOpt.CommandLineOption.Description">
+            <summary>Gets description that will be shown in the usage. Also the (optional) name of a unnamed parameter</summary>
+        </member>
+        <member name="P:Jokedst.GetOpt.CommandLineOption.ParameterType">
+            <summary>Gets type of value this parameter accepts</summary>
+        </member>
+        <member name="P:Jokedst.GetOpt.CommandLineOption.SetFunction">
+            <summary>Gets function that will be called when this option has been parsed</summary>
+        </member>
+        <member name="P:Jokedst.GetOpt.CommandLineOption.IsOptional">
+            <summary>Gets a value indicating whether an unnamed parameter is optional</summary>
+        </member>
+        <member name="P:Jokedst.GetOpt.CommandLineOption.Name">
+            <summary>Gets the name of this option, regardless of what type it is</summary>
+        </member>
+        <member name="T:Jokedst.GetOpt.GetOpt">
+            <summary>
+            Handles command line parameters, including loading them from a file with "-f" parameter and showing help with "-h" parameter
+            </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.GetOpt.applicationDescription">
+            <summary>
+            The application description, used in ShowUsage.
+            </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.GetOpt.options">
+            <summary>
+            All command line options
+            </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.GetOpt.shortNameLookup">
+            <summary>
+            Lookup for all options with a short name
+            </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.GetOpt.longNameLookup">
+            <summary>
+            Lookup for all options with a long name
+            </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.GetOpt.unnamedList">
+            <summary>
+            List of all unnamed options (i.e. options that you write without a "-" or "--" before)
+            </summary>
+        </member>
+        <member name="M:Jokedst.GetOpt.GetOpt.#ctor(System.String,System.Collections.Generic.IEnumerable{Jokedst.GetOpt.CommandLineOption},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Jokedst.GetOpt.GetOpt"/> class 
+            </summary>
+            <param name="applicationDescription">
+            Description of this application, to be used in ShowUsage
+            </param>
+            <param name="options">
+            The list of options that should be parsed for
+            </param>
+            <param name="addHelp">
+            If true (default) a help option will be added automatically
+            </param>
+        </member>
+        <member name="M:Jokedst.GetOpt.GetOpt.ShowUsage">
+            <summary>
+            Shows a generated help listing of all available options and parameters
+            </summary>
+        </member>
+        <member name="M:Jokedst.GetOpt.GetOpt.ParseOptions(System.String[],System.Boolean)">
+            <summary>
+            Parses the list of command line parameters
+            That this function writes to the console, and may quit the program if an error occurs
+            </summary>
+            <param name="args">The command line parameters array to parse</param>
+            <param name="exitOnError">If true will exit the application showing the error on any error</param>
+            <returns>Number of parsed parameters</returns>
+        </member>
+        <member name="M:Jokedst.GetOpt.GetOpt.ParseAndDispatch(System.String[],System.Int32,Jokedst.GetOpt.CommandLineOption)">
+            <summary>
+            Parses any parameters on the command line that is associated with this option, and calls the set function
+            </summary>
+            <param name="args">Command line arguments, usually the parameter to the "main" function</param>
+            <param name="i">Index in the args array we should start at</param>
+            <param name="option">Which option we are trying to parse</param>
+            <returns>How many of the arguments in args we used up</returns>
+        </member>
+        <member name="P:Jokedst.GetOpt.GetOpt.ParsedOptions">
+            <summary>
+            Gets number of found and parsed options
+            </summary>
+        </member>
+        <member name="P:Jokedst.GetOpt.GetOpt.AdditionalParameters">
+            <summary>
+            All additional parameters not specified are put here
+            </summary>
+        </member>
+        <member name="T:Jokedst.GetOpt.ParameterType">
+            <summary>
+            Supported parameter types.
+            Everything else should be handled as strings and parsed by the client application
+            </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.ParameterType.None">
+            <summary> This parameter takes no arguments </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.ParameterType.Integer">
+            <summary> This parameter takes an integer as argument </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.ParameterType.String">
+            <summary> This parameter takes a string as argument </summary>
+        </member>
+        <member name="F:Jokedst.GetOpt.ParameterType.Double">
+            <summary> This parameter takes a double as argument </summary>
+        </member>
+    </members>
+</doc>

@@ -44,7 +44,7 @@
                 Console.WriteLine("Error: {0}", e.Message);
                 return;
             }
-
+            
             // Read given file or standard input, split it up according to delimiter and sort by given field. No error handling, this is an example ;)
             StreamReader input = file != null ? new StreamReader(file) : new StreamReader(Console.OpenStandardInput());
             string line;
@@ -58,6 +58,15 @@
             foreach (var linepair in numeric ? s.OrderBy(x => int.Parse(x.Item1)) : s.OrderBy(x => x.Item1))
             {
                 Console.WriteLine(linepair.Item2);
+            }
+
+            if (opts.AdditionalParameters.Count > 1)
+            {
+                // Handle additional files here
+                foreach (var additionalParameter in opts.AdditionalParameters)
+                {
+                    Console.WriteLine("Another parameter '{0}' was included", additionalParameter);
+                }
             }
         }
     }
