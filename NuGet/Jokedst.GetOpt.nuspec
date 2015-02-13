@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Jokedst.GetOpt</id>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <authors>jokedst</authors>
     <owners>jokedst</owners>
     <licenseUrl>https://github.com/jokedst/GetOpt/blob/master/LICENSE</licenseUrl>
@@ -10,8 +10,8 @@
     <iconUrl>https://raw.github.com/jokedst/GetOpt/master/getopt.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>GetOpt for parsing command line options</description>
-    <releaseNotes>First version</releaseNotes>
-    <copyright>Copyright 2013</copyright>
+    <releaseNotes>Bugfix version for not comparing optional parameters correctly</releaseNotes>
+    <copyright>Copyright 2013-2014</copyright>
     <tags>getopt getopts CommandLine</tags>
   </metadata>
 </package>

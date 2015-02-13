@@ -255,7 +255,7 @@
                 i++;
             }
 
-            if (this.unnamedList.Count(x => !x.IsOptional) != unnamedIndex)
+            if (this.unnamedList.Count(x => !x.IsOptional) > unnamedIndex)
             {
                 throw new CommandLineException("Missing parameters");
             }
