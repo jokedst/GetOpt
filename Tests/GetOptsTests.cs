@@ -104,7 +104,6 @@
         public void CanShowHelp()
         {
             // Arrange
-            bool a = false, b = true, c = false;
             var opts = new GetOpt("desc",
                 new[]
                     {
@@ -128,17 +127,58 @@
         [ExpectedException(typeof(CommandLineException), ExpectedMessage = "Missing parameters")]
         public void StringParamPlusMissingFilenameShouldGenerateError()
         {
-            string s = null, f = null;
+            var opts = new GetOpt("desc",
+                new[]
+                {
+                    new CommandLineOption('s', null, "a param", ParameterType.String, null),
+                    new CommandLineOption("filename", ParameterType.String, null),
+                });
+
+            // Act
+            opts.ParseOptions(new[] { "-s", "sparam" });
+        }
+
+        [Test]
+        public void CanUseEqualToAssignValues()
+        {
+            string s = null;
+            int num = 0;
 
             var opts = new GetOpt("desc",
                 new[]
                 {
                     new CommandLineOption('s', null, "a param", ParameterType.String, o => s = (string)o),
-                    new CommandLineOption("filename", ParameterType.String, o => f = (string)o),
+                    new CommandLineOption('\0', "num", "a number", ParameterType.Integer, o => num = (int)o),
                 });
 
             // Act
-            opts.ParseOptions(new[] { "-s", "sparam" });
+            opts.ParseOptions(new[] { "--num=32", "-s=sparam" });
+
+            // Assert
+            Assert.AreEqual("sparam", s);
+            Assert.AreEqual(32, num);
+        }
+
+        [Test]
+        public void CanParseSeveralUnnamed()
+        {
+            string s = null, f = null;
+
+            var opts = new GetOpt("desc",
+                new[]
+                {
+                    new CommandLineOption("filename", ParameterType.String, o => s = (string)o),
+                    new CommandLineOption("filename2", ParameterType.String, o => f = (string)o),
+                });
+
+            // Act
+            opts.ParseOptions(new[] { "string1", "string2", "ignored" });
+
+            // Assert
+            Assert.AreEqual("string1", s);
+            Assert.AreEqual("string2", f);
+            Assert.AreEqual(1, opts.AdditionalParameters.Count);
+            Assert.AreEqual("ignored", opts.AdditionalParameters[0]);
         }
     }
 }

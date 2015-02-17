@@ -45,6 +45,8 @@
                 Console.WriteLine("Error: {0}", e.Message);
                 return;
             }
+
+            if (verbose) Console.WriteLine("Starting...");
             
             // Read given file or standard input, split it up according to delimiter and sort by given field. No error handling, this is an example ;)
             StreamReader input = file != null ? new StreamReader(file) : new StreamReader(Console.OpenStandardInput());

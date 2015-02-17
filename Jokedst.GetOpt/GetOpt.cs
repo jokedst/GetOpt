@@ -87,13 +87,16 @@
         public int ParsedOptions { get; private set; }
 
         /// <summary>
-        /// All additional parameters not specified are put here
+        /// Gets additional parameters not specified by unnamed options
         /// </summary>
-        public List<string> AdditionalParameters { get; protected set; }
+        public List<string> AdditionalParameters { get; private set; }
 
         /// <summary>
         /// Shows a generated help listing of all available options and parameters
         /// </summary>
+        /// <param name="exitApplication">
+        /// If true the application will exit after outputting the usage info
+        /// </param>
         public void ShowUsage(bool exitApplication = true)
         {
             string cmd = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
@@ -198,9 +201,15 @@
         /// Parses the list of command line parameters
         /// That this function writes to the console, and may quit the program if an error occurs
         /// </summary>
-        /// <param name="args">The command line parameters array to parse</param>
-        /// <param name="exitOnError">If true will exit the application showing the error on any error</param>
-        /// <returns>Number of parsed parameters</returns>
+        /// <param name="args">
+        /// The command line parameters array to parse
+        /// </param>
+        /// <param name="exitOnError">
+        /// If true will exit the application showing the error on any error
+        /// </param>
+        /// <returns>
+        /// Number of parsed parameters
+        /// </returns>
         public int ParseOptions(string[] args, bool exitOnError = false)
         {
             try
@@ -212,10 +221,16 @@
                 {
                     if (args[i].StartsWith("--"))
                     {
-                        string name = args[i].Substring(2);
+                        string name = args[i].Substring(2), inlineValue = null;
+                        if (name.Contains('='))
+                        {
+                            inlineValue = name.Substring(name.IndexOf('=') + 1);
+                            name = name.Substring(0, name.IndexOf('='));
+                        }
+
                         if (this.longNameLookup.ContainsKey(name))
                         {
-                            i = ParseAndDispatch(args, i, this.longNameLookup[name]);
+                            i = ParseAndDispatch(args, i, this.longNameLookup[name], inlineValue);
                         }
                         else
                         {
@@ -225,23 +240,30 @@
                     else if (args[i].StartsWith("-"))
                     {
                         int newi = i;
-                        for (var optionIndex = 1; optionIndex < args[i].Length; optionIndex++)
+                        string oneLetterOptions = args[i].Substring(1), inlineValue = null;
+                        if (oneLetterOptions.Contains('='))
                         {
-                            if (this.shortNameLookup.ContainsKey(args[i][optionIndex]))
+                            inlineValue = oneLetterOptions.Substring(oneLetterOptions.IndexOf('=') + 1);
+                            oneLetterOptions = oneLetterOptions.Substring(0, oneLetterOptions.IndexOf('='));
+                        }
+
+                        for (var optionIndex = 0; optionIndex < oneLetterOptions.Length; optionIndex++)
+                        {
+                            if (this.shortNameLookup.ContainsKey(oneLetterOptions[optionIndex]))
                             {
-                                var option = this.shortNameLookup[args[i][optionIndex]];
+                                var option = this.shortNameLookup[oneLetterOptions[optionIndex]];
 
                                 // If this is an option in the middle that requires a parameter, fail. Only the last such option can have a parameter
-                                if (option.ParameterType != ParameterType.None && optionIndex != args[i].Length - 1)
+                                if (option.ParameterType != ParameterType.None && optionIndex != oneLetterOptions.Length - 1)
                                 {
-                                    throw new CommandLineException(string.Format("Option '{0}' requires a parameter", args[i][optionIndex]));
+                                    throw new CommandLineException(string.Format("Option '{0}' requires a parameter", oneLetterOptions[optionIndex]));
                                 }
 
-                                newi = ParseAndDispatch(args, i, option);
+                                newi = ParseAndDispatch(args, i, option, inlineValue);
                             }
                             else
                             {
-                                throw new CommandLineException(string.Format("Unknown option '{0}'", args[i][optionIndex]));
+                                throw new CommandLineException(string.Format("Unknown option '{0}'", oneLetterOptions[optionIndex]));
                             }
                         }
 
@@ -279,6 +301,7 @@
                     Environment.Exit(1);
                     return 0;
                 }
+
                 throw;
             }
         }
@@ -286,13 +309,24 @@
         /// <summary>
         /// Parses any parameters on the command line that is associated with this option, and calls the set function
         /// </summary>
-        /// <param name="args">Command line arguments, usually the parameter to the "main" function</param>
-        /// <param name="i">Index in the args array we should start at</param>
-        /// <param name="option">Which option we are trying to parse</param>
-        /// <returns>How many of the arguments in args we used up</returns>
-        private static int ParseAndDispatch(string[] args, int i, CommandLineOption option)
+        /// <param name="args">
+        /// Command line arguments, usually the parameter to the "main" function
+        /// </param>
+        /// <param name="i">
+        /// Index in the args array we should start at
+        /// </param>
+        /// <param name="option">
+        /// Which option we are trying to parse
+        /// </param>
+        /// <param name="inlineValue">
+        /// optional value for parameter if found
+        /// </param>
+        /// <returns>
+        /// How many of the arguments in args we used up
+        /// </returns>
+        private static int ParseAndDispatch(string[] args, int i, CommandLineOption option, string inlineValue = null)
         {
-            if (option.ParameterType != ParameterType.None && args.Length < i + 2)
+            if (option.ParameterType != ParameterType.None && args.Length < i + 2 && inlineValue == null)
             {
                 throw new CommandLineException(string.Format("Option '{0}' requires a parameter", option.LongName ?? option.ShortName.ToString()));
             }
@@ -302,10 +336,10 @@
                 case ParameterType.Double:
                     double tempChar;
                     var ci = new CultureInfo("en-US");
-                    if (!double.TryParse(args[++i], NumberStyles.Any, ci, out tempChar))
+                    if (!double.TryParse(inlineValue ?? args[++i], NumberStyles.Any, ci, out tempChar))
                     {
                         throw new CommandLineException(
-                            string.Format("Option '{0}': '{1}' is not a valid numeric value", option.Name, args[i]));
+                            string.Format("Option '{0}': '{1}' is not a valid numeric value", option.Name, inlineValue ?? args[i]));
                     }
 
                     if (option.SetFunction != null)
@@ -316,9 +350,9 @@
                     return i;
                 case ParameterType.Integer:
                     int tempInt;
-                    if (!int.TryParse(args[++i], out tempInt))
+                    if (!int.TryParse(inlineValue ?? args[++i], out tempInt))
                     {
-                        throw new CommandLineException(string.Format("Option '{0}': '{1}' is not a valid integer", option.Name, args[i]));
+                        throw new CommandLineException(string.Format("Option '{0}': '{1}' is not a valid integer", option.Name, inlineValue ?? args[i]));
                     }
 
                     if (option.SetFunction != null)
@@ -328,9 +362,10 @@
 
                     return i;
                 case ParameterType.String:
+                    i++;
                     if (option.SetFunction != null)
                     {
-                        option.SetFunction(args[++i]);
+                        option.SetFunction(inlineValue ?? args[i]);
                     }
 
                     return i;
