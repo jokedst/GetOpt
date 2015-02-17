@@ -30,7 +30,8 @@
                     {
                         new CommandLineOption('s', "separator", "Field separator", ParameterType.String, o => separator = (string)o),
                         new CommandLineOption('v', "verbose", "Show more info about found files", ParameterType.None, o => verbose = true),
-                        new CommandLineOption('n', "numeric", "sort numerically", ParameterType.None, o => numeric = true),
+                        new CommandLineOption('V', null, "Show version", ParameterType.None, o => Console.WriteLine("Version: 1.0")),
+                        new CommandLineOption('\0', "numeric", "sort numerically", ParameterType.None, o => numeric = true),
                         new CommandLineOption('f', "field", "Which field to sort by. Default = 0", ParameterType.Integer, o => field = (int)o),
                         new CommandLineOption("file", ParameterType.String, o => file = (string)o, true),
                     });

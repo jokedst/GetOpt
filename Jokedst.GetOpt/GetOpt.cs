@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
 
     /// <summary>
@@ -93,18 +94,9 @@
         /// <summary>
         /// Shows a generated help listing of all available options and parameters
         /// </summary>
-        public void ShowUsage()
+        public void ShowUsage(bool exitApplication = true)
         {
-            string cmd = Environment.CommandLine;
-            if (cmd.IndexOf(" ") != -1)
-            {
-                cmd = cmd.Substring(0, cmd.IndexOf(" "));
-            }
-
-            if (cmd.EndsWith(".exe", true, null))
-            {
-                cmd = cmd.Substring(0, cmd.Length - 4);
-            }
+            string cmd = Path.GetFileNameWithoutExtension(Environment.GetCommandLineArgs()[0]);
 
             if (this.applicationDescription != null)
             {
@@ -167,7 +159,7 @@
                         }
                         else
                         {
-                            line += "   ";
+                            line += "    ";
                         }
 
                         if (option.LongName != null)
@@ -196,7 +188,10 @@
                 }
             }
 
-            Environment.Exit(0);
+            if (exitApplication)
+            {
+                Environment.Exit(0);
+            }
         }
 
         /// <summary>
