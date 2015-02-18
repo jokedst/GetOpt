@@ -20,9 +20,8 @@
         {
             var separator = "|";
             var field = 0;
-            var verbose = false;
-            var numeric = false;
-            string file = null;
+            bool verbose = false, numeric = false;
+            string file = null, file2 = null;
 
             var opts = new GetOpt(
                 "Sample application that sorts input rows based on a delimeted field", 
@@ -31,9 +30,11 @@
                         new CommandLineOption('s', "separator", "Field separator", ParameterType.String, o => separator = (string)o),
                         new CommandLineOption('v', "verbose", "Show more info about found files", ParameterType.None, o => verbose = true),
                         new CommandLineOption('V', null, "Show version", ParameterType.None, o => Console.WriteLine("Version: 1.0")),
+                        new CommandLineOption('B', null, "set B", ParameterType.String, o => Console.WriteLine("Version: 1.0")),
                         new CommandLineOption('\0', "numeric", "sort numerically", ParameterType.None, o => numeric = true),
                         new CommandLineOption('f', "field", "Which field to sort by. Default = 0", ParameterType.Integer, o => field = (int)o),
-                        new CommandLineOption("file", ParameterType.String, o => file = (string)o, true),
+                        new CommandLineOption("file", ParameterType.String, o => file = (string)o),
+                        new CommandLineOption("file2", ParameterType.String, o => file2 = (string)o, true),
                     });
 
             try

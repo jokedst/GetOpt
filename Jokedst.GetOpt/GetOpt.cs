@@ -130,7 +130,7 @@
                 {
                     if (option.ParameterType != ParameterType.None)
                     {
-                        Console.Write(" -{0} <{1}>", option.ShortName, option.ParameterType);
+                        Console.Write(" -{0} <{1}>", option.ShortName, option.LongName ?? option.ParameterType.ToString());
                     }
                 }
             }
