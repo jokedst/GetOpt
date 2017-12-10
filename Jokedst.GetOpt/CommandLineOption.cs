@@ -15,12 +15,12 @@
         /// <param name="setFunction"> Function to call when this parameter is found. Function parameter is found value </param>
         public CommandLineOption(char shortName, string longName, string description, ParameterType parameterType, SetOptionDelegate setFunction)
         {
-            this.ShortName = shortName;
-            this.LongName = longName;
-            this.Description = description;
-            this.ParameterType = parameterType;
-            this.SetFunction = setFunction;
-            this.IsOptional = true;
+            ShortName = shortName;
+            LongName = longName;
+            Description = description;
+            ParameterType = parameterType;
+            SetFunction = setFunction;
+            IsOptional = true;
         }
 
         /// <summary>
@@ -33,48 +33,48 @@
         /// <param name="optional"> If false an exception will be thrown if this parameter can not be found. </param>
         public CommandLineOption(string description, ParameterType parameterType, SetOptionDelegate setFunction, bool optional = false)
         {
-            this.ShortName = '\0';
-            this.LongName = null;
-            this.Description = description;
-            this.ParameterType = parameterType;
-            this.SetFunction = setFunction;
-            this.IsOptional = optional;
+            ShortName = '\0';
+            LongName = null;
+            Description = description;
+            ParameterType = parameterType;
+            SetFunction = setFunction;
+            IsOptional = optional;
         }
 
         /// <summary>Gets single character version of this option (e.g. -f)</summary>
-        public char ShortName { get; private set; }
+        public char ShortName { get; }
 
         /// <summary>Gets long version of this option (e.g. --file)</summary>
-        public string LongName { get; private set; }
+        public string LongName { get; }
 
         /// <summary>Gets description that will be shown in the usage. Also the (optional) name of a unnamed parameter</summary>
-        public string Description { get; private set; }
+        public string Description { get; }
 
         /// <summary>Gets type of value this parameter accepts</summary>
-        public ParameterType ParameterType { get; private set; }
+        public ParameterType ParameterType { get; }
 
         /// <summary>Gets function that will be called when this option has been parsed</summary>
-        public SetOptionDelegate SetFunction { get; private set; }
+        public SetOptionDelegate SetFunction { get; }
 
         /// <summary>Gets a value indicating whether an unnamed parameter is optional</summary>
-        internal bool IsOptional { get; private set; }
+        internal bool IsOptional { get; }
         
         /// <summary>Gets the name of this option, regardless of what type it is</summary>
         internal string Name
         {
             get
             {
-                if (this.LongName != null)
+                if (LongName != null)
                 {
-                    return this.LongName;
+                    return LongName;
                 }
 
-                if (this.ShortName != '\0')
+                if (ShortName != '\0')
                 {
-                    return "-" + this.ShortName;
+                    return "-" + ShortName;
                 }
 
-                return this.Description;
+                return Description;
             }
         }
     }

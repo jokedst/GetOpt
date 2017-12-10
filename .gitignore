@@ -108,3 +108,4 @@ Backup*/
 UpgradeLog*.XML
 /NuGet/Jokedst.GetOpt.dll.1.0.1.nupkg
 /NuGet/Jokedst.GetOpt.dll.1.0.0.nupkg
+/.vs

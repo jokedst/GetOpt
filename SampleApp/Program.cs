@@ -4,8 +4,13 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-
     using Jokedst.GetOpt;
+
+    public class ProgrmSettings
+    {
+        [Option("verbose", 'v',"Show more info about found files")]
+        public bool Verbose;
+    }
 
     /// <summary>
     /// Sample program that sorts a delimited file (e.g. a CSV file) based on a specific field on each row
@@ -46,6 +51,12 @@
                 Console.WriteLine("Error: {0}", e.Message);
                 return;
             }
+
+            GetOpt.Description("Sample application that sorts input rows based on a delimeted field")
+                .Parameter('v', "verbose", () => verbose = true)
+                .Parameter('s', "separator", o => separator = o)
+                .Parameter('f', "field", o => field = o)
+                .Parameter(o => file = o, "file");
 
             if (verbose) Console.WriteLine("Starting...");
             
