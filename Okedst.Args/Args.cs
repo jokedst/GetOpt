@@ -24,7 +24,7 @@
             public string Description { get; }
             public virtual object Value { get; }
 
-            public DetectedUsage(char? shortName, string longName, string description)
+            protected DetectedUsage(char? shortName, string longName, string description)
             {
                 this.ShortName = shortName;
                 this.LongName = longName;
@@ -43,6 +43,26 @@
             public bool IsSet { get; }
             public override object Value => this.IsSet;
         }
+
+        private abstract class DetectedParameter : DetectedUsage {
+            protected DetectedParameter(char? shortName, string longName, string description) : base(shortName, longName, description)
+            {
+            }
+        }
+
+        private class DetectedParameter<T> : DetectedUsage
+        {
+            public DetectedParameter(char? shortName, string longName, string description, T defaultValue, T value) 
+                : base(shortName, longName, description)
+            {
+                this.DefaultValue = defaultValue;
+                this.TypedValue = value;
+            }
+
+            public T DefaultValue { get; }
+            public T TypedValue { get;  }
+        }
+
         private static readonly List<DetectedUsage> DetectedUsages = new List<DetectedUsage>();
         private static readonly List<string> Arguments;
         private static readonly List<string> PureArguments = new List<string>();
@@ -227,21 +247,41 @@
             return null;
         }
 
-        public static T Get<T>(char parameterChar, T defaultValue = default(T))
+        public static string Get(char parameterChar, string parameterName)
         {
-            var i = Arguments.IndexOf("-" + parameterChar);
-            if (i == -1)
-                return defaultValue;
-            if (Arguments.Count <= i + 1)
-                Error($"Missing parameter value after '-{parameterChar}'", Arguments[i]);
-
-            var converter = TypeDescriptor.GetConverter(typeof(T));
-            var ret = (T)converter.ConvertFromString(Arguments[i + 1]);
-
-            Arguments.RemoveRange(i, 2);
-            return ret;
+            return Get(parameterChar, parameterName, "");
         }
 
+        public static T Get<T>(char parameterChar, string parameterName, T defaultValue = default(T))
+        {
+            //DetectedParameter foundLong = null;
+            //if (DetectedUsages.TryFind(x => x.ShortName == parameterChar, out DetectedParameter foundShort)
+            //    || DetectedUsages.TryFind(x => x.LongName == parameterName, out foundLong))
+            //{
+            //    if (foundShort != null && foundLong != null && foundShort != foundLong)
+            //    {
+            //        // TODO: Merge these two if possible
+            //    }
+
+            //    return (foundShort?.IsSet ?? false) || foundLong.IsSet;
+            //}
+
+            var result = defaultValue;
+            var i = Arguments.IndexOf("-" + parameterChar);
+            if (i != -1)
+            {
+                if (Arguments.Count <= i + 1)
+                    Error($"Missing parameter value after '-{parameterChar}'", Arguments[i]);
+
+                var converter = TypeDescriptor.GetConverter(typeof(T));
+                result = (T) converter.ConvertFromString(Arguments[i + 1]);
+
+                Arguments.RemoveRange(i, 2);
+            }
+            DetectedUsages.Add(new DetectedParameter<T>(parameterChar, parameterName, null, defaultValue, result));
+
+            return result;
+        }
 
         public static void SetErrorHandler(Action<string> errorHandler)
         {
@@ -265,7 +305,7 @@
 
         protected static void Error(string message, string faultyArgument) => ErrorHandler?.Invoke(message, faultyArgument);
 
-        /// <summary> Lazy value that is implicitly converted to target type when used </summary>
+        /// <summary> Lazy value that is implicitly converted to type <typeparamref name="T"/> when used </summary>
         public class LazyImplicit<T> : Lazy<T>
         {
             public LazyImplicit(Func<T> valueFactory) : base(valueFactory) { }
@@ -273,13 +313,13 @@
         }
     }
 
-        internal static class Extensions
-        {
-            public static bool TryFind<TBase,TDerived>(this List<TBase> items, Func<TDerived, bool> predicate, out TDerived result)
+    internal static class Extensions
+    {
+        public static bool TryFind<TBase, TDerived>(this List<TBase> items, Func<TDerived, bool> predicate, out TDerived result)
             where TDerived : TBase
-            {
-                result = items.OfType<TDerived>().FirstOrDefault(predicate);
-                return result != null;
-            }
+        {
+            result = items.OfType<TDerived>().FirstOrDefault(predicate);
+            return result != null;
         }
+    }
 }
