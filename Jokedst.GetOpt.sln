@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.106
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jokedst.GetOpt", "Jokedst.GetOpt\Jokedst.GetOpt.csproj", "{91F1FC38-4EE3-4360-B7C7-E8E1EE7345D3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleApp", "SampleApp\SampleApp.csproj", "{6085FE8C-C487-4C06-AFC9-3B24AD59F9C3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{A2F20897-B564-40F9-905B-1A49980AEF43}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Okedst.Args", "Okedst.Args\Okedst.Args.csproj", "{37B6B937-F8E3-4954-9E4E-301F0968A4A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,8 +29,15 @@ Global
 		{A2F20897-B564-40F9-905B-1A49980AEF43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2F20897-B564-40F9-905B-1A49980AEF43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2F20897-B564-40F9-905B-1A49980AEF43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37B6B937-F8E3-4954-9E4E-301F0968A4A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37B6B937-F8E3-4954-9E4E-301F0968A4A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37B6B937-F8E3-4954-9E4E-301F0968A4A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37B6B937-F8E3-4954-9E4E-301F0968A4A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5F2A2D16-0C05-44EF-B628-B113A8583853}
 	EndGlobalSection
 EndGlobal

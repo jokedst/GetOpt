@@ -2,9 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Configuration;
     using System.IO;
     using System.Linq;
     using Jokedst.GetOpt;
+    using Okedst.Args;
 
     public class ProgrmSettings
     {
@@ -17,11 +19,30 @@
     /// </summary>
     public class Program
     {
+        public static void Main(string[] args)
+        {
+            if (ConfigurationManager.AppSettings["tool"] == "Args")
+            {
+                ArgsMain(args);
+            }
+            else
+            {
+                GetOptMain(args);
+            }
+        }
+
+        private static void ArgsMain(string[] args)
+        {
+            var file1 = Args.Next();
+            var verbose = Args.Flag('v',"verbose");
+            var iterations = Args.Get('i', 100);
+        }
+
         /// <summary>
         /// Main entry
         /// </summary>
         /// <param name="args"> Command line parameters </param>
-        public static void Main(string[] args)
+        public static void GetOptMain(string[] args)
         {
             var separator = "|";
             var field = 0;

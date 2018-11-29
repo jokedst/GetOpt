@@ -34,6 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -53,6 +54,10 @@
     <ProjectReference Include="..\Jokedst.GetOpt\Jokedst.GetOpt.csproj">
       <Project>{91f1fc38-4ee3-4360-b7c7-e8e1ee7345d3}</Project>
       <Name>Jokedst.GetOpt</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Okedst.Args\Okedst.Args.csproj">
+      <Project>{37b6b937-f8e3-4954-9e4e-301f0968a4a2}</Project>
+      <Name>Okedst.Args</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

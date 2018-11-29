@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Tests</RootNamespace>
     <AssemblyName>Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArgsTests.cs" />
     <Compile Include="CommandLineOptionTests.cs" />
     <Compile Include="GetOptsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -55,6 +56,13 @@
       <Project>{91f1fc38-4ee3-4360-b7c7-e8e1ee7345d3}</Project>
       <Name>Jokedst.GetOpt</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Okedst.Args\Okedst.Args.csproj">
+      <Project>{37b6b937-f8e3-4954-9e4e-301f0968a4a2}</Project>
+      <Name>Okedst.Args</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
