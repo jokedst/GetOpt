@@ -155,6 +155,7 @@
         {
             Args.SetArguments();
             Args.ExeFileName = "Test";
+            Args.GetLong("param");
             Args.Get('p');
             Args.Next("hello");
             Args.Flag('f');
@@ -163,7 +164,22 @@
             var helpText = Args.GenerateHelp();
             string first = new StringReader(helpText).ReadLine();
 
-            Assert.AreEqual("Test -f --flag -p <string> [argument]", first);
+            Assert.AreEqual("Test -f --flag -p <String> --param <String> [argument]", first);
+        }
+
+        [Test]
+        public void Help_groups_short_flags()
+        {
+            Args.SetArguments();
+            Args.ExeFileName = "Test";
+            Args.Flag('c');
+            Args.Flag('b');
+            Args.Flag('a');
+
+            var helpText = Args.GenerateHelp();
+            string first = new StringReader(helpText).ReadLine();
+
+            Assert.AreEqual("Test -cba", first);
         }
     }
 }

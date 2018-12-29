@@ -24,6 +24,8 @@
             public string Description { get; }
             public virtual object Value { get; }
             public abstract int SortValue { get; }
+            public abstract Type ValueType { get; }
+            public virtual bool HasDefault => false;
 
             protected DetectedUsage(char? shortName, string longName, string description)
             {
@@ -44,6 +46,7 @@
             public bool IsSet { get; }
             public override object Value => this.IsSet;
             public override int SortValue => ShortName.HasValue ? 1 : 2;
+            public override Type ValueType => typeof(bool);
         }
 
         private class DetectedArgument<T> : DetectedUsage
@@ -59,6 +62,8 @@
             }
 
             public override int SortValue { get; }
+            public override Type ValueType => typeof(T);
+            public override bool HasDefault => !DefaultValue.Equals(default(T));
         }
 
         private class DetectedParameter<T> : DetectedUsage
@@ -74,6 +79,8 @@
             public T TypedValue { get; }
             public override object Value => this.TypedValue;
             public override int SortValue => ShortName.HasValue ? 3 : 4;
+            public override Type ValueType => typeof(T);
+            public override bool HasDefault => !DefaultValue.Equals(default(T));
         }
 
         private static readonly List<DetectedUsage> DetectedUsages = new List<DetectedUsage>();
@@ -135,6 +142,7 @@
         /// <returns> Lazy-loaded value that is evaluated when cast to string </returns>
         public static LazyImplicit<string> Next(string defaultValue = null)
         {
+            // TODO: Throw if arg with default is added after arg with no default
             DetectedUsages.Add(new DetectedArgument<string>(null, defaultValue));
             // If parameters look like "-f hello" we don't know if the "hello" belongs to the "-f" or not
             // until that flag is used. So we postpone the evaluation of this as long as possible
@@ -258,9 +266,9 @@
             return Get(parameterChar, (string)null);
         }
 
-        public static string GetLong(char parameterChar, string parameterName)
+        public static string GetLong(string parameterName)
         {
-            return GetLong(parameterChar, parameterName, "");
+            return GetLong(null, parameterName, "");
         }
 
         public static T Get<T>(char parameterChar, T defaultValue = default(T))
@@ -296,11 +304,17 @@
             return defaultValue;
         }
 
-        public static T GetLong<T>(char parameterChar, string parameterName, T defaultValue = default(T))
+        public static T GetLong<T>(char? parameterChar, string parameterName, T defaultValue = default(T))
         {
+            if (parameterChar == null && parameterName == null) throw new ArgumentException("Short and long versions can't both be null");
             var result = defaultValue;
-            var parameterString = "-" + parameterChar;
-            var i = Arguments.IndexOf(parameterString);
+            int i = -1;
+            string parameterString = "";
+            if (parameterChar.HasValue)
+            {
+                parameterString = "-" + parameterChar;
+                i = Arguments.IndexOf(parameterString);
+            }
             if (i == -1 && parameterName != null)
             {
                 parameterString = "--" + parameterName;
@@ -354,14 +368,33 @@
         {
             var sb = new StringBuilder(ExeFileName);
             DetectedUsages.Sort((a,b) => a.SortValue.CompareTo(b.SortValue));
+            var shortFlags = DetectedUsages.Where(x => x.SortValue == 1).ToList();
+            if (shortFlags.Any())
+            {
+                sb.Append(" -");
+                foreach (var shortFlag in shortFlags) sb.Append(shortFlag.ShortName.Value);
+            }
             foreach (var detectedUsage in DetectedUsages)
             {
                 if (detectedUsage is DetectedFlag flag)
                 {
-                    if (flag.ShortName.HasValue)
-                        sb.Append(" -").Append(flag.ShortName.Value);
-                    else
+                    if (!flag.ShortName.HasValue)
                         sb.Append(" --").Append(flag.LongName);
+                }else if (detectedUsage.SortValue == 3)
+                {
+                    sb.AppendFormat(" -{0} <{1}>", detectedUsage.ShortName, detectedUsage.ValueType.Name);
+                }
+                else if (detectedUsage.SortValue == 4)
+                {
+                    sb.AppendFormat(" --{0} <{1}>", detectedUsage.LongName, detectedUsage.ValueType.Name);
+                }
+                else
+                {
+                    // Argument
+                    if (detectedUsage.HasDefault)
+                        sb.Append(" [argument]");
+                    else
+                        sb.Append(" <argument>");
                 }
             }
 
