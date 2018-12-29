@@ -33,7 +33,7 @@
 
         private class DetectedFlag : DetectedUsage
         {
-            public DetectedFlag(char? shortName, string longName, string description, bool isSet) 
+            public DetectedFlag(char? shortName, string longName, string description, bool isSet)
                 : base(shortName, longName, description)
             {
                 this.IsSet = isSet;
@@ -43,15 +43,19 @@
             public override object Value => this.IsSet;
         }
 
-        private abstract class DetectedParameter : DetectedUsage {
-            protected DetectedParameter(char? shortName, string longName, string description) : base(shortName, longName, description)
+        private class DetectedArgument<T> : DetectedUsage
+        {
+            public T DefaultValue { get; }
+
+            public DetectedArgument(string description, T defaultValue) : base(null, null, description)
             {
+                this.DefaultValue = defaultValue;
             }
         }
 
         private class DetectedParameter<T> : DetectedUsage
         {
-            public DetectedParameter(char? shortName, string longName, string description, T defaultValue, T value) 
+            public DetectedParameter(char? shortName, string longName, string description, T defaultValue, T value)
                 : base(shortName, longName, description)
             {
                 this.DefaultValue = defaultValue;
@@ -59,7 +63,8 @@
             }
 
             public T DefaultValue { get; }
-            public T TypedValue { get;  }
+            public T TypedValue { get; }
+            public override object Value => this.TypedValue;
         }
 
         private static readonly List<DetectedUsage> DetectedUsages = new List<DetectedUsage>();
@@ -67,7 +72,6 @@
         private static readonly List<string> PureArguments = new List<string>();
         private static readonly string ExeFileName;
         private static readonly HashSet<char> FlagCache = new HashSet<char>();
-        private static readonly HashSet<string> FlagStringCache = new HashSet<string>();
 
         static Args()
         {
@@ -92,7 +96,6 @@
         {
             DetectedUsages.Clear();
             PureArguments.Clear();
-            FlagStringCache.Clear();
             FlagCache.Clear();
             var doubleDash = Arguments.IndexOf("--");
             if (doubleDash != -1)
@@ -104,7 +107,7 @@
                 }
                 Arguments.RemoveRange(doubleDash, PureArguments.Count);
             }
-            // Find all "multi-flag" options ("-acHe") and parse them
+            // Parse all "multi-flag" options ("-acHe")
             var index = Arguments.FindIndex(a => a.Length > 2 && a[0] == '-' && a[1] != '-');
             while (index != -1)
             {
@@ -123,6 +126,7 @@
         /// <returns> Lazy-loaded value that is evaluated when cast to string </returns>
         public static LazyImplicit<string> Next(string defaultValue = null)
         {
+            DetectedUsages.Add(new DetectedArgument<string>(null, defaultValue));
             // If parameters look like "-f hello" we don't know if the "hello" belongs to the "-f" or not
             // until that flag is used. So we postpone the evaluation of this as long as possible
             return new LazyImplicit<string>(() =>
@@ -189,37 +193,42 @@
             if (index != -1)
             {
                 Arguments.RemoveAt(index);
-                FlagStringCache.Add(flagName);
                 return true;
             }
 
             return false;
         }
 
-        public static bool Flag(char flagChar, string flagName)
+        public static bool Flag(char? flagChar, string flagName)
         {
-            DetectedFlag foundLong = null;
-            if (DetectedUsages.TryFind(x => x.ShortName == flagChar, out DetectedFlag foundShort)
-                || DetectedUsages.TryFind(x => x.LongName == flagName, out foundLong))
-            {
-                if (foundShort != null && foundLong != null && foundShort != foundLong)
-                {
-                    // TODO: Merge these two if possible
-                }
+            if (flagChar.HasValue && DetectedUsages.TryFind(x => x.ShortName == flagChar, out DetectedFlag foundChar))
+                return foundChar.IsSet;
+            if (flagName != null && DetectedUsages.TryFind(x => x.LongName == flagName, out DetectedFlag foundString))
+                return foundString.IsSet;
 
-                return (foundShort?.IsSet ?? false) || foundLong.IsSet;
-            }
-
-            var index = Arguments.FindIndex(x => x == "-" + flagChar || x == "--" + flagName);
-            DetectedUsages.Add(new DetectedFlag(flagChar, flagName, null, index != -1));
-            if (index != -1)
+            if (flagChar.HasValue && FlagCache.Contains(flagChar.Value))
             {
-                Arguments.RemoveAt(index);
-                FlagStringCache.Add(flagName);
+                DetectedUsages.Add(new DetectedFlag(flagChar, flagName, null, true));
                 return true;
             }
 
-            return false;
+            //DetectedFlag foundLong = null;
+            //if (DetectedUsages.TryFind(x => x.ShortName == flagChar, out DetectedFlag foundShort)
+            //    || DetectedUsages.TryFind(x => x.LongName == flagName, out foundLong))
+            //{
+            //    if (foundShort != null && foundLong != null && foundShort != foundLong)
+            //    {
+            //        // TODO: Merge these two if possible
+            //    }
+
+            //    return (foundShort?.IsSet ?? false) || foundLong.IsSet;
+            //}
+
+            var removed = Arguments.RemoveAll(x => (flagChar.HasValue && x == "-" + flagChar) || (flagName != null && x == "--" + flagName));
+            DetectedUsages.Add(new DetectedFlag(flagChar, flagName, null, removed!=0));
+   
+
+            return removed != 0;
         }
 
         /// <summary>
@@ -269,7 +278,7 @@
                     Error($"Missing parameter value after '-{parameterChar}'", Arguments[i]);
 
                 var converter = TypeDescriptor.GetConverter(typeof(T));
-                result = (T) converter.ConvertFromString(Arguments[i + 1]);
+                result = (T)converter.ConvertFromString(Arguments[i + 1]);
 
                 Arguments.RemoveRange(i, 2);
             }
