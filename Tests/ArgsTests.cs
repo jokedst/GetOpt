@@ -67,7 +67,7 @@
             // value of 'arg' depends on if 'a' is a flag or parameter, which we don't know yet
 
             // We chose 'parameter'
-            var param = Args.Parameter('a');
+            var param = Args.Get('a');
             Assert.AreEqual("maybe parameter", param);
             Assert.AreEqual("argument",(string) arg);
         }
@@ -80,7 +80,7 @@
             Assert.IsFalse(Args.Flag('f'));
             Assert.IsTrue(Args.Flag('s'));
             Assert.IsTrue(Args.Flag('w'));
-            Assert.AreEqual("aparam", Args.Parameter('a'));
+            Assert.AreEqual("aparam", Args.Get('a'));
             Assert.AreEqual("file1.txt", (string)Args.Next());
             Assert.AreEqual("file2.txt", (string)Args.Next());
         }
@@ -99,7 +99,7 @@
         {
             Args.SetArguments("Hello");
 
-            var p = Args.Parameter('p');
+            var p = Args.Get('p');
 
             Assert.Null(p);
         }
@@ -107,19 +107,18 @@
         [Test]
         public void Can_get()
         {
-            Args.SetArguments("Hello","-p","1500");
+            Args.SetArguments("Hello", "-p", "1500");
             var p = Args.Get<int>('p');
             Assert.AreEqual(1500, p);
 
             Args.SetArguments("Hello", "-p", "1500");
-            p = Args.Get('p',0);
+            p = Args.Get('p', 0);
             Assert.AreEqual(1500, p);
 
             Args.SetArguments("Hello", "-p", "1500");
-            p = Args.Get('x',600);
+            p = Args.Get('x', 600);
             Assert.AreEqual(600, p);
         }
-
 
         [Test]
         public void Can_get_flag_everal_times()
@@ -128,6 +127,26 @@
             Assert.IsTrue(Args.Flag('f'));
             Assert.IsTrue(Args.Flag('f'));
             Assert.IsTrue(Args.Flag('f'));
+        }
+
+        [Test]
+        public void Can_get_default_values()
+        {
+            Args.SetArguments();
+            var arg1 = Args.Next("first");
+            var arg2 = Args.Next("second");
+
+            Assert.AreEqual("first", (string)arg1);
+            Assert.AreEqual("second", (string)arg2);
+        }
+
+        [Test]
+        public void Can_transform_parameters()
+        {
+            Args.SetArguments("-o","file.txt");
+            var arg1 = Args.Get('o', "DEFAULT", o => o.ToUpper());
+
+            Assert.AreEqual("FILE.TXT", arg1);
         }
     }
 }

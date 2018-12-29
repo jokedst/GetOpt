@@ -1,5 +1,6 @@
-﻿namespace Okedst.Args
+namespace $rootnamespace$.Args
 {
+
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -14,7 +15,7 @@
     /// Parameter : an option with a parameter, e.g. "-f file.txt" or "-C:Debug"
     /// Argument : an option not linked to a letter at all, e.g. in "cp file1 file2" file1 and file2 are arguments
     /// </remarks>
-    internal class Args
+    public class Args
     {
         private class DetectedUsage
         {
@@ -23,7 +24,7 @@
             public string Description { get; }
             public virtual object Value { get; }
 
-            protected DetectedUsage(char? shortName, string longName, string description)
+            public DetectedUsage(char? shortName, string longName, string description)
             {
                 this.ShortName = shortName;
                 this.LongName = longName;
@@ -42,26 +43,6 @@
             public bool IsSet { get; }
             public override object Value => this.IsSet;
         }
-
-        private abstract class DetectedParameter : DetectedUsage {
-            protected DetectedParameter(char? shortName, string longName, string description) : base(shortName, longName, description)
-            {
-            }
-        }
-
-        private class DetectedParameter<T> : DetectedUsage
-        {
-            public DetectedParameter(char? shortName, string longName, string description, T defaultValue, T value) 
-                : base(shortName, longName, description)
-            {
-                this.DefaultValue = defaultValue;
-                this.TypedValue = value;
-            }
-
-            public T DefaultValue { get; }
-            public T TypedValue { get;  }
-        }
-
         private static readonly List<DetectedUsage> DetectedUsages = new List<DetectedUsage>();
         private static readonly List<string> Arguments;
         private static readonly List<string> PureArguments = new List<string>();
@@ -121,7 +102,7 @@
         /// Get next program argument
         /// </summary>
         /// <returns> Lazy-loaded value that is evaluated when cast to string </returns>
-        public static LazyImplicit<string> Next(string defaultValue = null)
+        public static LazyImplicit<string> Next()
         {
             // If parameters look like "-f hello" we don't know if the "hello" belongs to the "-f" or not
             // until that flag is used. So we postpone the evaluation of this as long as possible
@@ -152,9 +133,6 @@
                     PureArguments.RemoveAt(0);
                     return x;
                 }
-
-                if (defaultValue != null)
-                    return defaultValue;
 
                 Error("Argument missing", "");
                 return null;
@@ -225,97 +203,45 @@
         /// <summary>
         /// Gets a 
         /// </summary>
-        //public static string Parameter(char prefixChar)
-        //{
-        //    var prefix = "-" + prefixChar;
-        //    for (var i = 0; i < Arguments.Count; i++)
-        //    {
-        //        if (Arguments[i] == prefix)
-        //        {
-        //            if (Arguments.Count == i + 1)
-        //                Error($"Parameter {prefix} is not followed by a value", Arguments[i]);
-        //            else if (Arguments[i + 1].StartsWith("-"))
-        //                Error($"Parameter {prefix} is followed by {Arguments[i + 1]}, not a value", Arguments[i]);
-        //            else
-        //            {
-        //                // we blank this one out now that we know it's a parameter and not a flag
-        //                var result = Arguments[i + 1];
-        //                Arguments.RemoveRange(i, 2);
-        //                return result;
-        //            }
-        //        }
-        //    }
-
-        //    return null;
-        //}
-
-        public static string Get(char parameterChar)
+        public static string Parameter(char prefixChar)
         {
-            return Get(parameterChar, (string)null);
-        }
+            var prefix = "-" + prefixChar;
+            for (var i = 0; i < Arguments.Count; i++)
+            {
+                if (Arguments[i] == prefix)
+                {
+                    if (Arguments.Count == i + 1)
+                        Error($"Parameter {prefix} is not followed by a value", Arguments[i]);
+                    else if (Arguments[i + 1].StartsWith("-"))
+                        Error($"Parameter {prefix} is followed by {Arguments[i + 1]}, not a value", Arguments[i]);
+                    else
+                    {
+                        // we blank this one out now that we know it's a parameter and not a flag
+                        var result = Arguments[i + 1];
+                        Arguments.RemoveRange(i, 2);
+                        return result;
+                    }
+                }
+            }
 
-        public static string GetLong(char parameterChar, string parameterName)
-        {
-            return GetLong(parameterChar, parameterName, "");
+            return null;
         }
 
         public static T Get<T>(char parameterChar, T defaultValue = default(T))
         {
-            var result = defaultValue;
             var i = Arguments.IndexOf("-" + parameterChar);
-            if (i != -1)
-            {
-                if (Arguments.Count <= i + 1)
-                    Error($"Missing parameter value after '-{parameterChar}'", Arguments[i]);
+            if (i == -1)
+                return defaultValue;
+            if (Arguments.Count <= i + 1)
+                Error($"Missing parameter value after '-{parameterChar}'", Arguments[i]);
 
-                var converter = TypeDescriptor.GetConverter(typeof(T));
-                result = (T) converter.ConvertFromString(Arguments[i + 1]);
+            var converter = TypeDescriptor.GetConverter(typeof(T));
+            var ret = (T)converter.ConvertFromString(Arguments[i + 1]);
 
-                Arguments.RemoveRange(i, 2);
-            }
-            DetectedUsages.Add(new DetectedParameter<T>(parameterChar, null, null, defaultValue, result));
-
-            return result;
+            Arguments.RemoveRange(i, 2);
+            return ret;
         }
 
-        /// <summary>
-        /// Get a transformed parameter
-        /// </summary>
-        /// <param name="parameterChar"> Char that identifies this parameter (e.g. 'v' in '-v')</param>
-        /// <param name="transformFunc"> Transformation to run on given parameter</param>
-        /// <param name="defaultValue"> Default value if parameter was not set </param>
-        public static T Get<T>(char parameterChar, T defaultValue, Func<string, T> transformFunc)
-        {
-            var param = Get<string>(parameterChar, null);
-            if (param != null)
-                return transformFunc(param);
-            return defaultValue;
-        }
-
-        public static T GetLong<T>(char parameterChar, string parameterName, T defaultValue = default(T))
-        {
-            var result = defaultValue;
-            var parameterString = "-" + parameterChar;
-            var i = Arguments.IndexOf(parameterString);
-            if (i == -1 && parameterName != null)
-            {
-                parameterString = "--" + parameterName;
-                i = Arguments.IndexOf(parameterString);
-            }
-            if (i != -1)
-            {
-                if (Arguments.Count <= i + 1)
-                    Error($"Missing parameter value after '{parameterString}'", Arguments[i]);
-
-                var converter = TypeDescriptor.GetConverter(typeof(T));
-                result = (T)converter.ConvertFromString(Arguments[i + 1]);
-
-                Arguments.RemoveRange(i, 2);
-            }
-            DetectedUsages.Add(new DetectedParameter<T>(parameterChar, parameterName, null, defaultValue, result));
-
-            return result;
-        }
 
         public static void SetErrorHandler(Action<string> errorHandler)
         {
@@ -339,7 +265,7 @@
 
         protected static void Error(string message, string faultyArgument) => ErrorHandler?.Invoke(message, faultyArgument);
 
-        /// <summary> Lazy value that is implicitly converted to type <typeparamref name="T"/> when used </summary>
+        /// <summary> Lazy value that is implicitly converted to target type when used </summary>
         public class LazyImplicit<T> : Lazy<T>
         {
             public LazyImplicit(Func<T> valueFactory) : base(valueFactory) { }
@@ -347,13 +273,13 @@
         }
     }
 
-    internal static class Extensions
-    {
-        public static bool TryFind<TBase, TDerived>(this List<TBase> items, Func<TDerived, bool> predicate, out TDerived result)
-            where TDerived : TBase
+        internal static class Extensions
         {
-            result = items.OfType<TDerived>().FirstOrDefault(predicate);
-            return result != null;
+            public static bool TryFind<TBase,TDerived>(this List<TBase> items, Func<TDerived, bool> predicate, out TDerived result)
+            where TDerived : TBase
+            {
+                result = items.OfType<TDerived>().FirstOrDefault(predicate);
+                return result != null;
+            }
         }
-    }
 }

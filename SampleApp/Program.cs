@@ -33,9 +33,10 @@
 
         private static void ArgsMain(string[] args)
         {
-            var file1 = Args.Next();
-            var verbose = Args.Flag('v',"verbose");
-            var iterations = Args.Get('i', 100);
+            throw new NotImplementedException();
+            //var file1 = Args.Next();
+            //var verbose = Args.Flag('v',"verbose");
+            //var iterations = Args.Get('i', 100);
         }
 
         /// <summary>
