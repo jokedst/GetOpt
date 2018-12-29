@@ -1,5 +1,6 @@
 ﻿namespace Tests
 {
+    using System.IO;
     using Okedst.Args;
     using NUnit.Framework;
 
@@ -147,6 +148,22 @@
             var arg1 = Args.Get('o', "DEFAULT", o => o.ToUpper());
 
             Assert.AreEqual("FILE.TXT", arg1);
+        }
+
+        [Test]
+        public void Can_generate_help()
+        {
+            Args.SetArguments();
+            Args.ExeFileName = "Test";
+            Args.Get('p');
+            Args.Next("hello");
+            Args.Flag('f');
+            Args.Flag("flag");
+
+            var helpText = Args.GenerateHelp();
+            string first = new StringReader(helpText).ReadLine();
+
+            Assert.AreEqual("Test -f --flag -p <string> [argument]", first);
         }
     }
 }

@@ -5,6 +5,7 @@
     using System.ComponentModel;
     using System.IO;
     using System.Linq;
+    using System.Text;
 
     /// <summary>
     /// A no-configuration command line parameter parser, following getopt standard.
@@ -16,12 +17,13 @@
     /// </remarks>
     internal class Args
     {
-        private class DetectedUsage
+        private abstract class DetectedUsage
         {
             public char? ShortName { get; }
             public string LongName { get; }
             public string Description { get; }
             public virtual object Value { get; }
+            public abstract int SortValue { get; }
 
             protected DetectedUsage(char? shortName, string longName, string description)
             {
@@ -41,6 +43,7 @@
 
             public bool IsSet { get; }
             public override object Value => this.IsSet;
+            public override int SortValue => ShortName.HasValue ? 1 : 2;
         }
 
         private class DetectedArgument<T> : DetectedUsage
@@ -50,7 +53,12 @@
             public DetectedArgument(string description, T defaultValue) : base(null, null, description)
             {
                 this.DefaultValue = defaultValue;
+                this.SortValue = 5 + DetectedUsages.Count(x =>
+                                     x.GetType().IsGenericType && x.GetType().GetGenericTypeDefinition() ==
+                                     typeof(DetectedArgument<T>));
             }
+
+            public override int SortValue { get; }
         }
 
         private class DetectedParameter<T> : DetectedUsage
@@ -65,18 +73,19 @@
             public T DefaultValue { get; }
             public T TypedValue { get; }
             public override object Value => this.TypedValue;
+            public override int SortValue => ShortName.HasValue ? 3 : 4;
         }
 
         private static readonly List<DetectedUsage> DetectedUsages = new List<DetectedUsage>();
         private static readonly List<string> Arguments;
         private static readonly List<string> PureArguments = new List<string>();
-        private static readonly string ExeFileName;
+        internal static string ExeFileName;
         private static readonly HashSet<char> FlagCache = new HashSet<char>();
 
         static Args()
         {
             Arguments = Environment.GetCommandLineArgs().ToList();
-            ExeFileName = Arguments[0];
+            ExeFileName = Path.GetFileName(Arguments[0]);
             Arguments.RemoveAt(0);
             InitFlagCache();
         }
@@ -212,22 +221,8 @@
                 return true;
             }
 
-            //DetectedFlag foundLong = null;
-            //if (DetectedUsages.TryFind(x => x.ShortName == flagChar, out DetectedFlag foundShort)
-            //    || DetectedUsages.TryFind(x => x.LongName == flagName, out foundLong))
-            //{
-            //    if (foundShort != null && foundLong != null && foundShort != foundLong)
-            //    {
-            //        // TODO: Merge these two if possible
-            //    }
-
-            //    return (foundShort?.IsSet ?? false) || foundLong.IsSet;
-            //}
-
             var removed = Arguments.RemoveAll(x => (flagChar.HasValue && x == "-" + flagChar) || (flagName != null && x == "--" + flagName));
-            DetectedUsages.Add(new DetectedFlag(flagChar, flagName, null, removed!=0));
-   
-
+            DetectedUsages.Add(new DetectedFlag(flagChar, flagName, null, removed != 0));
             return removed != 0;
         }
 
@@ -353,6 +348,24 @@
         {
             public LazyImplicit(Func<T> valueFactory) : base(valueFactory) { }
             public static implicit operator T(LazyImplicit<T> lazy) => lazy.Value;
+        }
+
+        public static string GenerateHelp()
+        {
+            var sb = new StringBuilder(ExeFileName);
+            DetectedUsages.Sort((a,b) => a.SortValue.CompareTo(b.SortValue));
+            foreach (var detectedUsage in DetectedUsages)
+            {
+                if (detectedUsage is DetectedFlag flag)
+                {
+                    if (flag.ShortName.HasValue)
+                        sb.Append(" -").Append(flag.ShortName.Value);
+                    else
+                        sb.Append(" --").Append(flag.LongName);
+                }
+            }
+
+            return sb.ToString();
         }
     }
 

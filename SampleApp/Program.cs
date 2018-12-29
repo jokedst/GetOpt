@@ -39,6 +39,16 @@
             //var iterations = Args.Get('i', 100);
         }
 
+        private static unsafe void TestStrings()
+        {
+            var chars = new char[] {'H','e','j',' ','p','å'};
+            fixed (char* ch = chars)
+            {
+                var s = new String(ch, 0, 6);
+                Console.WriteLine(String.IsInterned(s));
+            }
+        }
+
         /// <summary>
         /// Main entry
         /// </summary>
