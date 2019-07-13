@@ -75,6 +75,42 @@
         }
 
         [Test]
+        public void Can_read_multiple_parameters_of_same_type()
+        {
+            Args.SetArguments("-f", "file1.txt", "-f", "file2.txt");
+
+            var file1 = Args.Get('f');
+            var file2 = Args.Get('f');
+
+            Assert.AreEqual("file1.txt", file1);
+            Assert.AreEqual("file2.txt", file2);
+        }
+
+        [Test]
+        public void Multiple_parameters_are_returned_in_the_right_order()
+        {
+            Args.SetArguments("--file", "file1.txt", "-f", "file2.txt");
+            Assert.AreEqual("file1.txt", Args.GetLong('f', "file"));
+            Assert.AreEqual("file2.txt", Args.GetLong('f', "file"));
+
+            Args.SetArguments("-f", "file1.txt", "--file", "file2.txt");
+            Assert.AreEqual("file1.txt", Args.GetLong('f', "file"));
+            Assert.AreEqual("file2.txt", Args.GetLong('f', "file"));
+        }
+
+        [Test]
+        public void Can_read_multiple_parameters_of_same_type_as_array()
+        {
+            Args.SetArguments("-f", "file1.txt", "-f", "file2.txt");
+
+            var files = Args.GetAll('f');
+
+            Assert.AreEqual(2, files.Count);
+            Assert.AreEqual("file1.txt", files[0]);
+            Assert.AreEqual("file2.txt", files[1]);
+        }
+
+        [Test]
         public void ShotgunTest()
         {
             Args.SetArguments("file1.txt", "-a", "aparam", "-wsd", "file2.txt");
@@ -140,6 +176,17 @@
 
             Assert.AreEqual("first", (string)arg1);
             Assert.AreEqual("second", (string)arg2);
+        }
+
+        [Test, SetCulture("en-us")]
+        public void Can_convert_values()
+        {
+            Args.SetArguments("--int", "345", "-l", "23.87");
+            var arg1 = Args.GetLong('i', "int", 9);
+            var arg2 = Args.Get('l', 0.0);
+
+            Assert.AreEqual(345, arg1);
+            Assert.AreEqual(23.87, arg2);
         }
 
         [Test]

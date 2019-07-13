@@ -19,8 +19,13 @@
     /// it could either be a flag "-f" and an argument "input.txt", or a named parameter "-f" with value "input.txt".
     /// This is solved by returning lazy objects for arguments; these are evaluated when used, and hopefully the "-f"
     /// has been defined by then.
+    /// 
+    /// Known issues:
+    /// * The "Get" and "GetLong" should be only "Get", but then Get(char, default) and Get(char, longname) would be indistingushable
+    /// * Since options are removed when found, "-p -f muu" would give -p the value "muu" if the flag -f is first in the code
+    /// * The LazyImplicit class isn't evaluated if sent to a generic method (like "Select()")
     /// </remarks>
-    public class Args
+    public static class Args
     {
         private abstract class DetectedUsage
         {
@@ -239,33 +244,6 @@
             return removed != 0;
         }
 
-        /// <summary>
-        /// Gets a 
-        /// </summary>
-        //public static string Parameter(char prefixChar)
-        //{
-        //    var prefix = "-" + prefixChar;
-        //    for (var i = 0; i < Arguments.Count; i++)
-        //    {
-        //        if (Arguments[i] == prefix)
-        //        {
-        //            if (Arguments.Count == i + 1)
-        //                Error($"Parameter {prefix} is not followed by a value", Arguments[i]);
-        //            else if (Arguments[i + 1].StartsWith("-"))
-        //                Error($"Parameter {prefix} is followed by {Arguments[i + 1]}, not a value", Arguments[i]);
-        //            else
-        //            {
-        //                // we blank this one out now that we know it's a parameter and not a flag
-        //                var result = Arguments[i + 1];
-        //                Arguments.RemoveRange(i, 2);
-        //                return result;
-        //            }
-        //        }
-        //    }
-
-        //    return null;
-        //}
-
         public static string Get(char parameterChar)
         {
             return Get(parameterChar, (string)null);
@@ -278,21 +256,7 @@
 
         public static T Get<T>(char parameterChar, T defaultValue = default(T))
         {
-            var result = defaultValue;
-            var i = Arguments.IndexOf("-" + parameterChar);
-            if (i != -1)
-            {
-                if (Arguments.Count <= i + 1)
-                    Error($"Missing parameter value after '-{parameterChar}'", Arguments[i]);
-
-                var converter = TypeDescriptor.GetConverter(typeof(T));
-                result = (T)converter.ConvertFromString(Arguments[i + 1]);
-
-                Arguments.RemoveRange(i, 2);
-            }
-            DetectedUsages.Add(new DetectedParameter<T>(parameterChar, null, null, defaultValue, result));
-
-            return result;
+            return GetLong<T>(parameterChar, null, defaultValue);
         }
 
         /// <summary>
@@ -309,6 +273,11 @@
             return defaultValue;
         }
 
+        public static string GetLong(char parameterChar, string parameterName)
+        {
+            return GetLong<string>(parameterChar, parameterName);
+        }
+
         public static T GetLong<T>(char? parameterChar, string parameterName, T defaultValue = default(T))
         {
             if (parameterChar == null && parameterName == null) throw new ArgumentException("Short and long versions can't both be null");
@@ -320,15 +289,20 @@
                 parameterString = "-" + parameterChar;
                 i = Arguments.IndexOf(parameterString);
             }
-            if (i == -1 && parameterName != null)
+            if (parameterName != null)
             {
-                parameterString = "--" + parameterName;
-                i = Arguments.IndexOf(parameterString);
+                var i2 = Arguments.IndexOf("--" + parameterName);
+                if (i2 != -1 && i > i2 || i == -1)
+                {
+                    parameterString = "--" + parameterName;
+                    i = i2;
+                }
             }
             if (i != -1)
             {
                 if (Arguments.Count <= i + 1)
                     Error($"Missing parameter value after '{parameterString}'", Arguments[i]);
+                // TODO maybe: check if the following argument starts with a dash
 
                 var converter = TypeDescriptor.GetConverter(typeof(T));
                 result = (T)converter.ConvertFromString(Arguments[i + 1]);
@@ -340,12 +314,28 @@
             return result;
         }
 
+        public static List<string> GetAll(char parameterChar) => GetAll(parameterChar, null);
+
+        public static List<string> GetAll(string parameterName) => GetAll(null, parameterName);
+
+        public static List<string> GetAll(char? parameterChar, string parameterName)
+        {
+            var values = new List<string>();
+            string value = GetLong<string>(parameterChar, parameterName);
+            while (value != null)
+            {
+                values.Add(value);
+                value = GetLong<string>(parameterChar, parameterName);
+            }
+            return values;
+        }
+
         public static void SetErrorHandler(Action<string> errorHandler)
         {
             ErrorHandler = (message, argument) => errorHandler(message);
         }
 
-        protected static void ExitProccessErrorHandler(string message, string faultyArgument)
+        private static void ExitProccessErrorHandler(string message, string faultyArgument)
         {
             var exeFile = Path.GetFileName(ExeFileName);
             Console.Error.WriteLine($"Error in {exeFile}:");
@@ -360,7 +350,7 @@
         /// </summary>
         public static ErrorHandlerDelegate ErrorHandler { get; set; } = ExitProccessErrorHandler;
 
-        protected static void Error(string message, string faultyArgument) => ErrorHandler?.Invoke(message, faultyArgument);
+        private static void Error(string message, string faultyArgument) => ErrorHandler?.Invoke(message, faultyArgument);
 
         /// <summary> Lazy value that is implicitly converted to type <typeparamref name="T"/> when used </summary>
         public class LazyImplicit<T> : Lazy<T>
