@@ -11,11 +11,16 @@
     /// A no-configuration command line parameter parser, following getopt standard.
     /// </summary>
     /// <remarks>
-    /// Flag : an option without parameters, e.g. "-v" or each letter in "-xkc"
-    /// Parameter : an option with a parameter, e.g. "-f file.txt" or "-C:Debug"
-    /// Argument : an option not linked to a letter at all, e.g. in "cp file1 file2" file1 and file2 are arguments
+    /// Flag : an option without parameters, e.g. "-v", "--version" or each letter in "-xkc".
+    /// Parameter : an option with a parameter, e.g. "-f in.txt, "--file in.txt" or "-C:Debug".
+    /// Argument : an option not linked to a perfix at all, e.g. in "cp file1 file2" file1 and file2 are arguments.
+    /// 
+    /// Since this library detects options on-the-fly there is a problem with options like "-f input.txt" -
+    /// it could either be a flag "-f" and an argument "input.txt", or a named parameter "-f" with value "input.txt".
+    /// This is solved by returning lazy objects for arguments; these are evaluated when used, and hopefully the "-f"
+    /// has been defined by then.
     /// </remarks>
-    internal class Args
+    public class Args
     {
         private abstract class DetectedUsage
         {
@@ -294,8 +299,8 @@
         /// Get a transformed parameter
         /// </summary>
         /// <param name="parameterChar"> Char that identifies this parameter (e.g. 'v' in '-v')</param>
-        /// <param name="transformFunc"> Transformation to run on given parameter</param>
         /// <param name="defaultValue"> Default value if parameter was not set </param>
+        /// <param name="transformFunc"> Transformation to run on given parameter</param>
         public static T Get<T>(char parameterChar, T defaultValue, Func<string, T> transformFunc)
         {
             var param = Get<string>(parameterChar, null);

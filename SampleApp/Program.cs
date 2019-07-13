@@ -33,10 +33,10 @@
 
         private static void ArgsMain(string[] args)
         {
-            throw new NotImplementedException();
-            //var file1 = Args.Next();
-            //var verbose = Args.Flag('v',"verbose");
-            //var iterations = Args.Get('i', 100);
+            //throw new NotImplementedException();
+            var file1 = Args.Next();
+            var verbose = Args.Flag('v', "verbose");
+            var iterations = Args.Get('i', 100);
         }
 
         private static unsafe void TestStrings()

@@ -124,7 +124,7 @@
         }
 
         [Test]
-        [ExpectedException(typeof(CommandLineException), ExpectedMessage = "Missing parameters")]
+        //[ExpectedException(typeof(CommandLineException), ExpectedMessage = "Missing parameters")]
         public void StringParamPlusMissingFilenameShouldGenerateError()
         {
             var opts = new GetOpt("desc",
@@ -134,8 +134,8 @@
                     new CommandLineOption("filename", ParameterType.String, null),
                 });
 
-            // Act
-            opts.ParseOptions(new[] { "-s", "sparam" });
+            var exception = Assert.Throws<CommandLineException>(() => opts.ParseOptions(new[] { "-s", "sparam" }));
+            Assert.AreEqual("Missing parameters", exception.Message);
         }
 
         [Test]

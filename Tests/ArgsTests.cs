@@ -3,6 +3,7 @@
     using System.IO;
     using Okedst.Args;
     using NUnit.Framework;
+    using System;
 
     public class ArgsTests
     {
@@ -163,6 +164,7 @@
 
             var helpText = Args.GenerateHelp();
             string first = new StringReader(helpText).ReadLine();
+            Console.WriteLine(helpText);
 
             Assert.AreEqual("Test -f --flag -p <String> --param <String> [argument]", first);
         }
